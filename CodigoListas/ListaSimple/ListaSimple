@@ -1,0 +1,265 @@
+package CodigoListas.ListaSimple;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class ListaSimple<T extends Comparable<T>> implements Iterable<T>
+{
+    private int tamanio;
+    private Nodo<T> nodoPrimero;
+
+    public ListaSimple()
+    {
+        this.tamanio = 0;
+        this.nodoPrimero = null;
+    }
+
+    // # 1. Agrega un elemento al inicio de la lista.
+    public void agregarInicio(T valor)
+    {
+        Nodo<T> nodoNuevo = new Nodo<>(valor);
+        nodoNuevo.setSiguiente(this.nodoPrimero); // El nuevo nodo apunta al antiguo primero.
+        this.nodoPrimero = nodoNuevo; // La lista ahora comienza en el nuevo nodo.
+        this.tamanio++;
+    }
+
+    // # 2. Agrega un elemento al final de la lista.
+    public void agregarFinal(Nodo<T> nodo)
+    {
+        // # Si la lista está vacía, agregar al final es lo mismo que agregar al inicio.
+        if (esVacio()) {
+            this.nodoPrimero = nodo;
+        } else {
+            // # Se busca el último nodo para enlazar el nuevo.
+            Nodo<T> ultimo = this.nodoPrimero;
+            while (ultimo.getSiguiente() != null) {
+                ultimo = ultimo.getSiguiente();
+            }
+            ultimo.setSiguiente(nodo);
+        }
+        this.tamanio++;
+    }
+
+    // # 3. Agrega un elemento en una posición específica.
+    public void agregarIndice(int indice, T valor)
+    {
+        // # Se usa una cláusula de guarda para el caso de inserción al inicio.
+        if (indice == 0) {
+            agregarInicio(valor);
+            return;
+        }
+
+        // # Se valida que el índice esté en un rango intermedio válido.
+        if (indiceValido(indice)) {
+            Nodo<T> nuevo = new Nodo<>(valor);
+            Nodo<T> previo = obtenerNodo(indice - 1); // Se obtiene el nodo anterior.
+            nuevo.setSiguiente(previo.getSiguiente());
+            previo.setSiguiente(nuevo);
+            this.tamanio++;
+        }
+    }
+
+    // # 4. Obtiene el valor de un nodo en una posición dada.
+    public T obtenerValor(int indice)
+    {
+        // # Se valida el índice antes de proceder.
+        if (!indiceValido(indice)) {
+            throw new IndexOutOfBoundsException("Índice fuera de rango.");
+        }
+        Nodo<T> nodoEncontrado = obtenerNodo(indice);
+        return nodoEncontrado.getValor();
+    }
+
+    // # 5. Obtiene la referencia a un nodo en una posición dada.
+    public Nodo<T> obtenerNodo(int indice)
+    {
+        if (!indiceValido(indice)) {
+            return null;
+        }
+        Nodo<T> aux = this.nodoPrimero;
+        // # Se usa un bucle for para el recorrido.
+        for (int i = 0; i < indice; i++) {
+            aux = aux.getSiguiente();
+        }
+        return aux;
+    }
+
+    // # 6. Obtiene la posición de un nodo según su valor.
+    public int obtenerPosicionNodo(T valor)
+    {
+        int posicion = 0;
+        for (Nodo<T> aux = this.nodoPrimero; aux != null; aux = aux.getSiguiente()) {
+            if (aux.getValor().equals(valor)) {
+                return posicion;
+            }
+            posicion++;
+        }
+        return -1; // Retorna -1 si el valor no se encuentra.
+    }
+
+    // # 7. Valida si un índice es correcto dentro de la lista.
+    public boolean indiceValido(int indice)
+    {
+        return indice >= 0 && indice < this.tamanio;
+    }
+
+    // # 8. Verifica si la lista está vacía.
+    public boolean esVacio()
+    {
+        return this.tamanio == 0;
+    }
+
+    // # 9. Elimina el primer nodo de la lista.
+    public void eliminarPrimero()
+    {
+        if (esVacio()) {
+            return; // No hay nada que eliminar.
+        }
+        this.nodoPrimero = this.nodoPrimero.getSiguiente();
+        this.tamanio--;
+    }
+
+    // # 10. Elimina el último nodo de la lista.
+    public void eliminarUltimo()
+    {
+        // # Se validan los casos borde primero.
+        if (esVacio()) {
+            return;
+        }
+        if (this.tamanio == 1) {
+            borrarLista(); // Si solo hay un elemento, es como borrar la lista.
+            return;
+        }
+
+        Nodo<T> penultimo = obtenerNodo(this.tamanio - 2);
+        penultimo.setSiguiente(null);
+        this.tamanio--;
+    }
+
+    // # 11. Elimina un nodo por su valor.
+    public void eliminar(T valor)
+    {
+        if (esVacio()) {
+            return;
+        }
+        // # Caso especial: el nodo a eliminar es el primero.
+        if (this.nodoPrimero.getValor().equals(valor)) {
+            eliminarPrimero();
+            return;
+        }
+        
+        Nodo<T> aux = this.nodoPrimero;
+        while(aux.getSiguiente() != null) {
+            if (aux.getSiguiente().getValor().equals(valor)) {
+                aux.setSiguiente(aux.getSiguiente().getSiguiente());
+                this.tamanio--;
+                return; // Se termina la ejecución una vez eliminado.
+            }
+            aux = aux.getSiguiente();
+        }
+    }
+
+    // # 12. Modifica el valor de un nodo en una posición específica.
+    public void modificarNodo(int indice, T nuevoValor)
+    {
+        if (indiceValido(indice)) {
+            Nodo<T> nodoAModificar = obtenerNodo(indice);
+            nodoAModificar.setValor(nuevoValor);
+        }
+    }
+
+    // # 13. Ordena la lista utilizando el método de burbuja.
+    public void ordenarLista()
+    {
+        if (this.tamanio < 2) {
+            return;
+        }
+        for (int i = 0; i < this.tamanio; i++) {
+            Nodo<T> actual = this.nodoPrimero;
+            Nodo<T> siguiente = actual.getSiguiente();
+            for (int j = 0; j < this.tamanio - 1; j++) {
+                if (siguiente != null && actual.getValor().compareTo(siguiente.getValor()) > 0) {
+                    T temp = actual.getValor();
+                    actual.setValor(siguiente.getValor());
+                    siguiente.setValor(temp);
+                }
+                actual = siguiente;
+                if(siguiente != null) {
+                   siguiente = siguiente.getSiguiente();
+                }
+            }
+        }
+    }
+
+    // # 14. Imprime el contenido de la lista en consola.
+    public void imprimirLista()
+    {
+        // # Se usa un iterador for-each implícito para mostrar la lista.
+        StringBuilder sb = new StringBuilder();
+        for(T valor : this) {
+            sb.append(valor).append(" -> ");
+        }
+        sb.append("null");
+        System.out.println(sb.toString());
+    }
+
+    // # 15. Provee un iterador para recorrer la lista.
+    @Override
+    public Iterator<T> iterator()
+    {
+        return new Iterator<T>() {
+            private Nodo<T> actual = nodoPrimero;
+
+            public boolean hasNext() {
+                return actual != null;
+            }
+
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                T valor = actual.getValor();
+                actual = actual.getSiguiente();
+                return valor;
+            }
+        };
+    }
+
+    // # 16. Borra todos los elementos de la lista.
+    public void borrarLista()
+    {
+        this.nodoPrimero = null;
+        this.tamanio = 0;
+    }
+
+    // # 17. Invierte el contenido de la lista de forma recursiva.
+    public void invertirContenido(ListaSimple<T> lista)
+    {
+        if (lista.tamanio > 1) {
+            lista.nodoPrimero = invertirRecursivo(lista.nodoPrimero, null);
+        }
+    }
+    
+    // # Método auxiliar para la recursividad de invertirContenido.
+    private Nodo<T> invertirRecursivo(Nodo<T> actual, Nodo<T> anterior)
+    {
+        // # Caso base: cuando llegamos al final de la lista original.
+        if (actual == null) {
+            return anterior; // El 'anterior' es ahora la nueva cabeza.
+        }
+        
+        // # Fase de "ida": guardamos el siguiente y avanzamos.
+        Nodo<T> siguienteTemporal = actual.getSiguiente();
+        
+        // # Fase de "vuelta": el nodo actual apunta a su anterior.
+        actual.setSiguiente(anterior);
+        
+        return invertirRecursivo(siguienteTemporal, actual);
+    }
+    
+    // # Método auxiliar para obtener el tamaño.
+    public int getTamanio()
+    {
+        return this.tamanio;
+    }
+}
